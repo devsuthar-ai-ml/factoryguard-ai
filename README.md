@@ -1,142 +1,92 @@
+<div align="center">
+
 # FactoryGuard AI
+### IoT Predictive Maintenance Engine
 
-**IoT Predictive Maintenance Engine for Industrial Robotic Arms**
+**Predict catastrophic robotic-arm failures up to 24 hours in advance**
 
-FactoryGuard AI predicts catastrophic machine failures up to **24 hours in advance** using time-series sensor telemetry and imbalance-aware machine learning.  
-It is designed to help manufacturing teams shift from reactive maintenance to planned interventions.
+![Python](https://img.shields.io/badge/Python-3.11+-0A0F1C?style=for-the-badge&logo=python&logoColor=FFD43B)
+![Flask](https://img.shields.io/badge/Flask-API-0A0F1C?style=for-the-badge&logo=flask&logoColor=white)
+![XGBoost](https://img.shields.io/badge/XGBoost-Production%20Model-0A0F1C?style=for-the-badge&logo=xgboost&logoColor=F7901E)
+![LightGBM](https://img.shields.io/badge/LightGBM-Optional-0A0F1C?style=for-the-badge&logo=lightgbm&logoColor=9FEF00)
+![SHAP](https://img.shields.io/badge/Explainability-SHAP-0A0F1C?style=for-the-badge&logo=plotly&logoColor=3DDC97)
+![PR-AUC](https://img.shields.io/badge/Metric-PR--AUC-0A0F1C?style=for-the-badge&logo=databricks&logoColor=FF3621)
 
----
-
-## Executive Summary
-
-- Problem: Rare failures in large robotic fleets cause high unplanned downtime costs.
-- Approach: Engineer temporal features from live sensor streams and train high-precision classifiers.
-- Outcome: Real-time failure-risk scoring API + operator dashboard for maintenance decisions.
-- Deployment target: Low-latency inference (`< 50ms` p95 objective).
+</div>
 
 ---
 
-## Business Use Case
+## Product Vision
 
-A critical plant floor operates ~500 robotic arms with:
+FactoryGuard AI turns raw factory telemetry into actionable maintenance intelligence.
 
-- `vibration`
-- `temperature`
-- `pressure`
-
-FactoryGuard AI estimates failure probability in the next 24 hours so the maintenance team can:
-
-- Prioritize at-risk assets.
-- Schedule preventive maintenance.
-- Reduce false alarms through precision-oriented thresholding.
-- Minimize unscheduled stoppages and revenue loss.
+- Plant scale: **500 robotic arms**
+- Data signals: **vibration, temperature, pressure**
+- Business target: **avoid unplanned downtime**
+- Prediction horizon: **next 24 hours**
 
 ---
 
-## Core Features
+## Visual Architecture
 
-### 1) Time-Series Feature Engineering
-
-- Rolling Mean (`1h`, `6h`, `12h`)
-- Exponential Moving Average (`1h`, `6h`, `12h`)
-- Rolling Standard Deviation (`1h`, `6h`, `12h`)
-- Lag Features (`t-1`, `t-2`)
-
-### 2) Modeling Strategy
-
-- Baseline Models:
-  - Logistic Regression
-  - Random Forest
-- Production Models:
-  - XGBoost (default)
-  - LightGBM
-- Hyperparameter tuning with Optuna
-
-### 3) Imbalance Handling
-
-- Primary metric: **PR-AUC** (not accuracy)
-- Class weighting via `scale_pos_weight`
-- Optional SMOTE path for comparison
-
-### 4) Explainability
-
-- SHAP-based local feature attribution
-- JSON output for top contributing factors
-
-### 5) Deployment
-
-- Flask API for real-time scoring
-- `joblib` model + metadata bundling
-- Latency benchmark utility
-- Dashboard UI for non-technical users
-
----
-
-## Architecture Overview
-
-```text
-Raw Sensor Data (per arm, timestamped)
-           |
-           v
-Feature Engineering Pipeline
-(rolling stats + EMA + lag features)
-           |
-           v
-Model Training & Tuning
-(baseline + XGBoost/LightGBM + PR-AUC optimization)
-           |
-           v
-Serialized Bundle
-(model + feature config + metadata + threshold)
-           |
-           v
-Flask Inference API (/predict)
-           |
-           v
-Operator Dashboard + Maintenance Decision
+```mermaid
+flowchart LR
+    A[Sensor Stream<br/>Vibration / Temperature / Pressure] --> B[Time-Series Feature Engineering<br/>Rolling Mean / EMA / Std / Lag]
+    B --> C[Model Training Pipeline<br/>Baselines + XGBoost/LightGBM + Optuna]
+    C --> D[Model Bundle<br/>joblib + Threshold + Metadata]
+    D --> E[Flask Inference API<br/>/predict]
+    E --> F[Operations Dashboard<br/>Risk + Action]
+    D --> G[SHAP Explainability<br/>Local Contributors]
 ```
 
 ---
 
-## Repository Structure
+## System Highlights
+
+| Capability | What It Delivers |
+|---|---|
+| Advanced Time Features | Captures trend, drift, and volatility using `1h`, `6h`, `12h` windows |
+| Imbalance-Aware Learning | Handles rare failures with PR-AUC optimization and class weighting |
+| Production Models | XGBoost (default) / LightGBM with Optuna tuning |
+| Explainable Output | SHAP-based local reasoning for maintenance decisions |
+| Low-Latency Serving | Real-time JSON API with p95 latency checks |
+| Operator-Friendly UI | Dashboard for non-technical stakeholders |
+
+---
+
+## Tech Stack
+
+```text
+Python 3.11+, Pandas, NumPy
+scikit-learn, imbalanced-learn
+XGBoost, LightGBM, Optuna
+SHAP, Flask, joblib
+```
+
+---
+
+## Repository Map
 
 ```text
 .
 |-- api/
-|   |-- __init__.py
-|   |-- app.py
-|-- scripts/
-|   |-- latency_check.py
+|   |-- app.py                    # Flask API + Dashboard UI
 |-- src/
-|   |-- __init__.py
-|   |-- explainability.py
-|   |-- feature_engineering.py
-|   |-- model_trainer.py
-|   |-- train_pipeline.py
+|   |-- feature_engineering.py    # Rolling stats, EMA, lag features
+|   |-- model_trainer.py          # Baselines + tuned production model
+|   |-- train_pipeline.py         # End-to-end training + artifact export
+|   |-- explainability.py         # SHAP local explanations
+|-- scripts/
+|   |-- latency_check.py          # p95 inference latency benchmark
 |-- requirements.txt
 |-- README.md
 ```
 
 ---
 
-## Tech Stack
+## Quickstart
 
-- Python 3.11+
-- Pandas, NumPy
-- scikit-learn
-- imbalanced-learn
-- XGBoost
-- LightGBM
-- Optuna
-- SHAP
-- Flask
-- joblib
-
----
-
-## Quick Start
-
-### 1) Create environment and install dependencies
+### 1) Setup Environment
 
 ```bash
 python -m venv .venv
@@ -144,50 +94,44 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-### 2) Train the model
-
-If `data/sensor_timeseries.csv` is unavailable, synthetic data is generated automatically.
+### 2) Train Model
 
 ```bash
 python -m src.train_pipeline --model-family xgboost --n-trials 5
 ```
 
-Optional alternatives:
+Optional:
 
 ```bash
 python -m src.train_pipeline --model-family lightgbm --n-trials 10
 python -m src.train_pipeline --model-family xgboost --use-smote --n-trials 10
 ```
 
-Generated artifacts:
+Artifacts generated:
 
 - `models/factoryguard_model.joblib`
 - `reports/training_metrics.json`
 
-### 3) Start API + UI
+### 3) Run API + Dashboard
 
 ```bash
 python -m api.app
 ```
 
-Open in browser:
+Open:
 
-- `http://127.0.0.1:8000/` (dashboard)
-- `http://127.0.0.1:8000/health` (health endpoint)
+- `http://127.0.0.1:8000/`
+- `http://127.0.0.1:8000/health`
 
 ---
 
-## API Reference
+## Inference API
 
-### `GET /health`
+### Endpoint
 
-Service health check.
+`POST /predict`
 
-### `POST /predict`
-
-Predicts 24h failure probability from recent rows.
-
-Request body:
+### Request
 
 ```json
 {
@@ -210,7 +154,7 @@ Request body:
 }
 ```
 
-Response body:
+### Response
 
 ```json
 {
@@ -224,9 +168,9 @@ Response body:
 
 ---
 
-## Explainability Workflow
+## Explainability Layer
 
-Generate SHAP explanation artifact:
+Generate SHAP contributors for local predictions:
 
 ```bash
 python -m src.explainability --model-path models/factoryguard_model.joblib --input-csv data/sensor_timeseries.csv
@@ -238,45 +182,49 @@ Output:
 
 ---
 
-## Performance & Validation
+## Performance Gate
 
-Latency benchmark:
+Run latency benchmark:
 
 ```bash
 python scripts/latency_check.py
 ```
 
-Outputs include:
+Tracks:
 
-- mean latency
-- p95 latency
-- max latency
-- pass/fail against `< 50ms` p95 target
-
-Model training outputs include:
-
-- baseline PR-AUC
-- best tuned model PR-AUC
-- optimized threshold
-- training metadata
+- Mean latency
+- P95 latency
+- Max latency
+- Pass/Fail against `< 50ms` p95 target
 
 ---
 
-## Production Hardening Checklist
+## Delivery Timeline (Execution View)
 
-- Replace Flask dev server with Gunicorn/Uvicorn behind reverse proxy.
-- Add auth/rate limiting for API endpoints.
-- Add model versioning and rollback strategy.
-- Add CI pipeline for:
-  - training metric regression checks
-  - API contract tests
-  - latency guardrails
-- Integrate structured logging + monitoring dashboards.
+```mermaid
+timeline
+    title FactoryGuard AI Delivery Path
+    Week 1 : Data schema and feature engineering pipeline
+           : Rolling stats, EMA, lag features
+    Week 2 : Baselines, production modeling, Optuna tuning
+           : Imbalance handling with PR-AUC focus
+    Week 3 : SHAP explainability integration and reporting
+    Week 4 : Flask deployment, real-time API, UI, latency validation
+```
+
+---
+
+## Production Hardening Roadmap
+
+- Containerized inference service
+- API auth + rate limiting
+- Model registry and versioned rollbacks
+- CI for model quality and API contracts
+- Monitoring: drift, latency, alert precision, failure recall
 
 ---
 
 ## License
 
-Internal / project-specific.  
-If publishing publicly, add a proper OSS license (MIT/Apache-2.0/etc.).
+Internal / project-specific. Add OSS license before public open-source release.
 
